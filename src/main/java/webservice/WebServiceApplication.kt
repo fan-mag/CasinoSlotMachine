@@ -4,6 +4,9 @@ import CasinoLib.exceptions.ForbiddenException
 import CasinoLib.exceptions.WrongApikeyProvidedException
 import CasinoLib.helpers.Exceptions
 import CasinoLib.model.Message
+import CasinoLib.model.Operator
+import CasinoLib.services.Account
+import CasinoLib.services.Auth
 import CasinoLib.services.CasinoLibrary
 import exceptions.InvalidRequestBodyException
 import exceptions.WrongContentTypeException
@@ -19,13 +22,16 @@ import org.springframework.web.bind.annotation.RequestHeader
 
 class WebServiceApplication {
     companion object {
+        lateinit var operator: Operator
 
         @JvmStatic
         fun main(args: Array<String>) {
             CasinoLibrary.init("src/main/resources/casinolib.properties")
+            operator = Operator().fromJson()
             SpringApplication.run(WebServiceApplication::class.java)
         }
     }
+
 
     @PostMapping("/slot")
     fun slotMachine(@RequestBody requestBody: String,
@@ -35,8 +41,10 @@ class WebServiceApplication {
             RequestProcess.validateContentType(contentType)
             RequestProcess.validateApikey(apikey)
             val bet = RequestProcess.bodyToBet(requestBody)
-            //TODO after new version of CasinoLib make sub/add balance opers
-            return ResponseEntity(Reward("xxx", 0), HttpStatus.ACCEPTED)
+            val userLogin = Auth.getUserLogin(apikey)
+            Account.subBalance(operator.apikey, userLogin, bet.amount)
+            Account.addBalance(operator.apikey, operator.login, bet.amount)
+            return ResponseEntity(Reward(slot = "000", win = -bet.amount), HttpStatus.OK)
         } catch (exception: Exception) {
             when (exception) {
                 is WrongContentTypeException -> return ResponseEntity(Message("Wrong Content-Type Header"), HttpStatus.BAD_REQUEST)
