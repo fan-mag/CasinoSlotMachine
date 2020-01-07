@@ -1,6 +1,7 @@
 package webservice
 
 import CasinoLib.exceptions.ForbiddenException
+import CasinoLib.exceptions.NotEnoughMoney
 import CasinoLib.exceptions.WrongApikeyProvidedException
 import CasinoLib.helpers.Exceptions
 import CasinoLib.model.Message
@@ -12,6 +13,7 @@ import exceptions.InvalidRequestBodyException
 import exceptions.WrongContentTypeException
 import helpers.Environment
 import helpers.RequestProcess
+import helpers.Slot
 import model.Reward
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -48,13 +50,21 @@ open class WebServiceApplication {
             val userLogin = Auth.getUserLogin(apikey)
             Account.subBalance(operator.apikey, userLogin, bet.amount)
             Account.addBalance(operator.apikey, operator.login, bet.amount)
-            return ResponseEntity(Reward(slot = "000", win = -bet.amount), HttpStatus.OK)
+            val slot = Slot.play()
+            val winRate = Slot.getRate(slot)
+            val winAmount = bet.amount * winRate.rate
+            if (winRate.rate != 0) {
+                Account.addBalance(operator.apikey, userLogin, winAmount)
+                Account.subBalance(operator.apikey, operator.login, winAmount)
+            }
+            return ResponseEntity(Reward(slot = slot, win = winAmount), HttpStatus.OK)
         } catch (exception: Exception) {
             when (exception) {
                 is WrongContentTypeException -> return ResponseEntity(Message("Wrong Content-Type Header"), HttpStatus.BAD_REQUEST)
                 is WrongApikeyProvidedException -> return ResponseEntity(Message("Wrong Apikey provided"), HttpStatus.UNAUTHORIZED)
                 is InvalidRequestBodyException -> return ResponseEntity(Message("Invalid request body"), HttpStatus.BAD_REQUEST)
                 is ForbiddenException -> return ResponseEntity(Message("You are not authorized to do this request"), HttpStatus.FORBIDDEN)
+                is NotEnoughMoney -> return ResponseEntity(Message("You don't have enough money to play"), HttpStatus.UNPROCESSABLE_ENTITY)
                 else -> Exceptions.handle(exception, Environment.service)
             }
             return ResponseEntity(Message("Internal Server Error"), HttpStatus.INTERNAL_SERVER_ERROR)
