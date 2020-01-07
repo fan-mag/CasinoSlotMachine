@@ -11,6 +11,7 @@ import CasinoLib.services.Auth
 import CasinoLib.services.CasinoLibrary
 import exceptions.InvalidRequestBodyException
 import exceptions.WrongContentTypeException
+import helpers.Database
 import helpers.Environment
 import helpers.RequestProcess
 import helpers.Slot
@@ -32,6 +33,7 @@ open class WebServiceApplication {
 
         @JvmStatic
         fun main(args: Array<String>) {
+            Database()
             CasinoLibrary.init("src/main/resources/casinolib.properties")
             operator = Operator().fromJson()
             SpringApplication.run(WebServiceApplication::class.java)
@@ -57,6 +59,7 @@ open class WebServiceApplication {
                 Account.addBalance(operator.apikey, userLogin, winAmount)
                 Account.subBalance(operator.apikey, operator.login, winAmount)
             }
+            Database.Log(userLogin, slot, -winAmount)
             return ResponseEntity(Reward(slot = slot, win = winAmount), HttpStatus.OK)
         } catch (exception: Exception) {
             when (exception) {

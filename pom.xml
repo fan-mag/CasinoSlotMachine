@@ -18,7 +18,7 @@
         <dependency>
             <groupId>CasinoLib</groupId>
             <artifactId>CasinoLib</artifactId>
-            <version>${env.CasinoLibVersion}</version>
+            <version>${Env.CasinoLibVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -47,6 +47,13 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.driver.version}</version>
         </dependency>
 
     </dependencies>
