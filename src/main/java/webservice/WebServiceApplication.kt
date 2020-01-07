@@ -59,7 +59,7 @@ open class WebServiceApplication {
                 Account.addBalance(operator.apikey, userLogin, winAmount)
                 Account.subBalance(operator.apikey, operator.login, winAmount)
             }
-            Database.Log(userLogin, slot, -winAmount)
+            Database.Log(userLogin, slot, bet.amount - winAmount)
             return ResponseEntity(Reward(slot = slot, win = winAmount), HttpStatus.OK)
         } catch (exception: Exception) {
             when (exception) {
