@@ -18,7 +18,7 @@
         <dependency>
             <groupId>CasinoLib</groupId>
             <artifactId>CasinoLib</artifactId>
-            <version>${Env.CasinoLibVersion}</version>
+            <version>${env.CasinoLibVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
