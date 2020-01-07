@@ -14,13 +14,17 @@ import helpers.Environment
 import helpers.RequestProcess
 import model.Reward
 import org.springframework.boot.SpringApplication
+import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RestController
 
-class WebServiceApplication {
+@SpringBootApplication
+@RestController
+open class WebServiceApplication {
     companion object {
         lateinit var operator: Operator
 
