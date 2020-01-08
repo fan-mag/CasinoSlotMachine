@@ -20,10 +20,12 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.scheduling.annotation.Async
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
+import java.util.concurrent.Callable
 
 @SpringBootApplication
 @RestController
@@ -40,11 +42,11 @@ open class WebServiceApplication {
         }
     }
 
-
+    @Async
     @PostMapping("/slot")
-    fun slotMachine(@RequestBody requestBody: String,
-                    @RequestHeader(name = "Content-Type", required = true) contentType: String,
-                    @RequestHeader(name = "apikey", required = true) apikey: String): ResponseEntity<Any> {
+    open fun slotMachine(@RequestBody requestBody: String,
+                         @RequestHeader(name = "Content-Type", required = true) contentType: String,
+                         @RequestHeader(name = "apikey", required = true) apikey: String): Callable<ResponseEntity<*>> {
         try {
             RequestProcess.validateContentType(contentType)
             RequestProcess.validateApikey(apikey)
@@ -60,17 +62,17 @@ open class WebServiceApplication {
                 Account.subBalance(operator.apikey, operator.login, winAmount)
             }
             Database.Log(userLogin, slot, bet.amount - winAmount)
-            return ResponseEntity(Reward(slot = slot, win = winAmount), HttpStatus.OK)
+            return Callable { ResponseEntity(Reward(slot = slot, win = winAmount), HttpStatus.OK) }
         } catch (exception: Exception) {
             when (exception) {
-                is WrongContentTypeException -> return ResponseEntity(Message("Wrong Content-Type Header"), HttpStatus.BAD_REQUEST)
-                is WrongApikeyProvidedException -> return ResponseEntity(Message("Wrong Apikey provided"), HttpStatus.UNAUTHORIZED)
-                is InvalidRequestBodyException -> return ResponseEntity(Message("Invalid request body"), HttpStatus.BAD_REQUEST)
-                is ForbiddenException -> return ResponseEntity(Message("You are not authorized to do this request"), HttpStatus.FORBIDDEN)
-                is NotEnoughMoney -> return ResponseEntity(Message("You don't have enough money to play"), HttpStatus.UNPROCESSABLE_ENTITY)
+                is WrongContentTypeException -> return Callable { ResponseEntity(Message("Wrong Content-Type Header"), HttpStatus.BAD_REQUEST) }
+                is WrongApikeyProvidedException -> return Callable { ResponseEntity(Message("Wrong Apikey provided"), HttpStatus.UNAUTHORIZED) }
+                is InvalidRequestBodyException -> return Callable { ResponseEntity(Message("Invalid request body"), HttpStatus.BAD_REQUEST) }
+                is ForbiddenException -> return Callable { ResponseEntity(Message("You are not authorized to do this request"), HttpStatus.FORBIDDEN) }
+                is NotEnoughMoney -> return Callable { ResponseEntity(Message("You don't have enough money to play"), HttpStatus.UNPROCESSABLE_ENTITY) }
                 else -> Exceptions.handle(exception, Environment.service)
             }
-            return ResponseEntity(Message("Internal Server Error"), HttpStatus.INTERNAL_SERVER_ERROR)
+            return Callable { ResponseEntity(Message("Internal Server Error"), HttpStatus.INTERNAL_SERVER_ERROR) }
         }
     }
 }
